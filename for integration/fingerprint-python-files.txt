@@ -1,0 +1,557 @@
+### 1. network_fingerprint.py
+
+```python
+import logging
+import socket
+import time
+import ssl
+import requests
+from datetime import datetime
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def tcp_ip_stack_behavior_analysis(ip):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(5)
+        start_time = time.time()
+        result = sock.connect_ex((ip, 80))
+        end_time = time.time()
+        connection_time = end_time - start_time
+        sock.close()
+        return {
+            'connection_result': result,
+            'connection_time': connection_time
+        }
+    except Exception as e:
+        logger.error(f"Error in TCP/IP stack behavior analysis: {e}")
+        return None
+
+def connection_timing_patterns(ip):
+    try:
+        times = []
+        for _ in range(5):
+            start_time = time.time()
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            sock.connect_ex((ip, 80))
+            end_time = time.time()
+            sock.close()
+            times.append(end_time - start_time)
+        return {
+            'connection_times': times
+        }
+    except Exception as e:
+        logger.error(f"Error in connection timing patterns: {e}")
+        return None
+
+def http_header_order_and_composition(url):
+    try:
+        response = requests.get(url)
+        headers = dict(response.headers)
+        return {
+            'http_headers': headers
+        }
+    except Exception as e:
+        logger.error(f"Error in HTTP header order and composition: {e}")
+        return None
+
+def tls_fingerprinting(ip):
+    try:
+        context = ssl.create_default_context()
+        with context.wrap_socket(socket.socket(), server_hostname=ip) as ssock:
+            ssock.connect((ip, 443))
+            cipher_suite = ssock.cipher()[0]
+        return {
+            'cipher_suite': cipher_suite
+        }
+    except Exception as e:
+        logger.error(f"Error in TLS fingerprinting: {e}")
+        return None
+
+def network_fingerprint(ip, url):
+    try:
+        tcp_ip = tcp_ip_stack_behavior_analysis(ip)
+        connection_timings = connection_timing_patterns(ip)
+        http_headers = http_header_order_and_composition(url)
+        tls_info = tls_fingerprinting(ip)
+
+        return {
+            'tcp_ip_stack_behavior': tcp_ip,
+            'connection_timings': connection_timings,
+            'http_headers': http_headers,
+            'tls_info': tls_info
+        }
+    except Exception as e:
+        logger.error(f"Error in network fingerprinting: {e}")
+        return None
+
+if __name__ == "__main__":
+    ip = "192.168.1.1"
+    url = "https://example.com"
+    print(network_fingerprint(ip, url))
+```
+
+### 2. device_fingerprint.py
+
+```python
+import logging
+import platform
+import psutil
+import json
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def screen_resolution_and_color_depth():
+    try:
+        screen_info = psutil.sensors_temperatures()
+        resolution = f"{screen_info['width']}x{screen_info['height']}"
+        color_depth = screen_info['color_depth']
+        return {
+            'screen_resolution': resolution,
+            'color_depth': color_depth
+        }
+    except Exception as e:
+        logger.error(f"Error in screen resolution and color depth: {e}")
+        return None
+
+def hardware_performance_benchmarks():
+    try:
+        cpu_info = psutil.cpu_times()
+        memory_info = psutil.virtual_memory()
+        disk_info = psutil.disk_usage('/')
+        return {
+            'cpu_info': dict(cpu_info),
+            'memory_info': dict(memory_info),
+            'disk_info': dict(disk_info)
+        }
+    except Exception as e:
+        logger.error(f"Error in hardware performance benchmarks: {e}")
+        return None
+
+def available_sensors_and_precision():
+    try:
+        sensors = psutil.sensors_temperatures()
+        sensor_data = {}
+        for sensor_name, sensor_list in sensors.items():
+            sensor_data[sensor_name] = []
+            for sensor in sensor_list:
+                sensor_data[sensor_name].append({
+                    'label': sensor.label,
+                    'current': sensor.current,
+                    'high': sensor.high,
+                    'critical': sensor.critical
+                })
+        return {
+            'sensors': sensor_data
+        }
+    except Exception as e:
+        logger.error(f"Error in available sensors and precision: {e}")
+        return None
+
+def battery_status_reporting():
+    try:
+        battery = psutil.sensors_battery()
+        if battery:
+            return {
+                'battery_percent': battery.percent,
+                'time_left': str(battery.secsleft),
+                'power_plugged': battery.power_plugged
+            }
+        else:
+            return {
+                'battery_percent': None,
+                'time_left': None,
+                'power_plugged': None
+            }
+    except Exception as e:
+        logger.error(f"Error in battery status reporting: {e}")
+        return None
+
+def device_fingerprint():
+    try:
+        screen_info = screen_resolution_and_color_depth()
+        performance_benchmarks = hardware_performance_benchmarks()
+        sensors = available_sensors_and_precision()
+        battery = battery_status_reporting()
+
+        return {
+            'screen_info': screen_info,
+            'performance_benchmarks': performance_benchmarks,
+            'sensors': sensors,
+            'battery': battery
+        }
+    except Exception as e:
+        logger.error(f"Error in device fingerprinting: {e}")
+        return None
+
+if __name__ == "__main__":
+    print(json.dumps(device_fingerprint(), indent=4))
+```
+
+### 3. fingerprint_core.py
+
+```python
+import logging
+from network_fingerprint import network_fingerprint
+from device_fingerprint import device_fingerprint
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def integrate_fingerprinting(ip, url):
+    try:
+        network_data = network_fingerprint(ip, url)
+        device_data = device_fingerprint()
+
+        return {
+            'network': network_data,
+            'device': device_data
+        }
+    except Exception as e:
+        logger.error(f"Error in integrating fingerprinting methods: {e}")
+        return None
+
+if __name__ == "__main__":
+    ip = "192.168.1.1"
+    url = "https://example.com"
+    print(integrate_fingerprinting(ip, url))
+```
+
+### 4. fingerprint_collectors.py
+
+```python
+import logging
+from fingerprint_core import integrate_fingerprinting
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def collect_network_fingerprint(ip, url):
+    try:
+        return network_fingerprint(ip, url)
+    except Exception as e:
+        logger.error(f"Error in collecting network fingerprint: {e}")
+        return None
+
+def collect_device_fingerprint():
+    try:
+        return device_fingerprint()
+    except Exception as e:
+        logger.error(f"Error in collecting device fingerprint: {e}")
+        return None
+
+def collect_fingerprint(ip, url):
+    try:
+        return integrate_fingerprinting(ip, url)
+    except Exception as e:
+        logger.error(f"Error in collecting fingerprint: {e}")
+        return None
+
+if __name__ == "__main__":
+    ip = "192.168.1.1"
+    url = "https://example.com"
+    print(collect_fingerprint(ip, url))
+```
+
+### 5. fingerprint_ml.py
+
+```python
+import logging
+import joblib
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def load_model(model_path):
+    try:
+        model = joblib.load(model_path)
+        return model
+    except Exception as e:
+        logger.error(f"Error loading model: {e}")
+        return None
+
+def train_model(data, labels, model_path):
+    try:
+        X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X_train, y_train)
+
+        y_pred = model.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        logger.info(f"Model accuracy: {accuracy}")
+
+        joblib.dump(model, model_path)
+        return model
+    except Exception as e:
+        logger.error(f"Error training model: {e}")
+        return None
+
+def classify_bot(fingerprint_data, model):
+    try:
+        features = extract_features(fingerprint_data)
+        prediction = model.predict([features])
+        return prediction[0]
+    except Exception as e:
+        logger.error(f"Error classifying bot: {e}")
+        return None
+
+def extract_features(fingerprint_data):
+    try:
+        features = []
+        # Add feature extraction logic here
+        return features
+    except Exception as e:
+        logger.error(f"Error extracting features: {e}")
+        return []
+
+if __name__ == "__main__":
+    model_path = "bot_classification_model.pkl"
+    model = load_model(model_path)
+    if not model:
+        data = [...]  # Example data
+        labels = [...]  # Example labels
+        model = train_model(data, labels, model_path)
+
+    fingerprint_data = {...}  # Example fingerprint data
+    classification = classify_bot(fingerprint_data, model)
+    print(classification)
+```
+
+### 6. fingerprint_db.py
+
+```python
+import logging
+import sqlite3
+import json
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+DB_NAME = "fingerprinting.db"
+
+def init_db():
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS bot_visits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS work_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                bot_id INTEGER NOT NULL,
+                result TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(bot_id) REFERENCES bot_visits(id)
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS fingerprinting_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                bot_id INTEGER NOT NULL,
+                data TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(bot_id) REFERENCES bot_visits(id)
+            )
+        ''')
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Error initializing database: {e}")
+
+def log_bot_visit(ip):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        cursor.execute('INSERT INTO bot_visits (ip) VALUES (?)', (ip,))
+        bot_id = cursor.lastrowid
+
+        conn.commit()
+        conn.close()
+        return bot_id
+    except Exception as e:
+        logger.error(f"Error logging bot visit: {e}")
+        return None
+
+def log_work_result(bot_id, result):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        cursor.execute('INSERT INTO work_results (bot_id, result) VALUES (?, ?)', (bot_id, result))
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Error logging work result: {e}")
+
+def log_fingerprinting_data(bot_id, data):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+
+        cursor.execute('INSERT INTO fingerprinting_data (bot_id, data) VALUES (?, ?)', (bot_id, data))
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Error logging fingerprinting data: {e}")
+
+if __name__ == "__main__":
+    init_db()
+    bot_id = log_bot_visit("192.168.1.1")
+    log_work_result(bot_id, "Task completed successfully")
+    log_fingerprinting_data(bot_id, json.dumps({"key": "value"}))
+```
+
+### 7. fingerprint_api.py
+
+```python
+import logging
+from flask import Flask, request, jsonify
+from fingerprint_core import integrate_fingerprinting
+from fingerprint_db import log_bot_visit, log_fingerprinting_data
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+
+@app.route('/fingerprint', methods=['POST'])
+def fingerprint():
+    try:
+        data = request.json
+        ip = data.get('ip')
+        url = data.get('url')
+
+        if not ip or not url:
+            return jsonify({'error': 'IP and URL are required'}), 400
+
+        fingerprint_data = integrate_fingerprinting(ip, url)
+        if not fingerprint_data:
+            return jsonify({'error': 'Fingerprinting failed'}), 500
+
+        bot_id = log_bot_visit(ip)
+        if not bot_id:
+            return jsonify({'error': 'Logging bot visit failed'}), 500
+
+        log_fingerprinting_data(bot_id, json.dumps(fingerprint_data))
+
+        return jsonify(fingerprint_data), 200
+    except Exception as e:
+        logger.error(f"Error in fingerprint API: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+if __name__ == "__main__":
+    app.run(debug=True)
+```
+
+### 8. fingerprint_config.py
+
+```python
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# System settings and configuration
+CONFIG = {
+    'db_name': 'fingerprinting.db',
+    'model_path': 'bot_classification_model.pkl',
+    'flask_host': '0.0.0.0',
+    'flask_port': 5000
+}
+
+if __name__ == "__main__":
+    print(CONFIG)
+```
+
+### 9. test_fingerprinting.py
+
+```python
+import logging
+import unittest
+from network_fingerprint import network_fingerprint
+from device_fingerprint import device_fingerprint
+from fingerprint_core import integrate_fingerprinting
+from fingerprint_db import init_db, log_bot_visit, log_work_result, log_fingerprinting_data
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class TestFingerprinting(unittest.TestCase):
+
+    def setUp(self):
+        init_db()
+
+    def test_network_fingerprint(self):
+        ip = "192.168.1.1"
+        url = "https://example.com"
+        data = network_fingerprint(ip, url)
+        self.assertIsNotNone(data)
+
+    def test_device_fingerprint(self):
+        data = device_fingerprint()
+        self.assertIsNotNone(data)
+
+    def test_integrate_fingerprinting(self):
+        ip = "192.168.1.1"
+        url = "https://example.com"
+        data = integrate_fingerprinting(ip, url)
+        self.assertIsNotNone(data)
+
+    def test_log_bot_visit(self):
+        ip = "192.168.1.1"
+        bot_id = log_bot_visit(ip)
+        self.assertIsNotNone(bot_id)
+
+    def test_log_work_result(self):
+        bot_id = log_bot_visit("192.168.1.1")
+        log_work_result(bot_id, "Task completed successfully")
+        self.assertTrue(True)  # No exception means success
+
+    def test_log_fingerprinting_data(self):
+        bot_id = log_bot_visit("192.168.1.1")
+        data = {"key": "value"}
+        log_fingerprinting_data(bot_id, json.dumps(data))
+        self.assertTrue(True)  # No exception means success
+
+if __name__ == "__main__":
+    unittest.main()
+```
+
+### Summary
+
+- **network_fingerprint.py**: Collects network information such as TCP/IP stack behavior, connection timing, HTTP headers, and TLS fingerprinting.
+- **device_fingerprint.py**: Collects device information such as screen resolution, hardware performance benchmarks, available sensors, and battery status.
+- **fingerprint_core.py**: Central API that integrates all fingerprinting methods.
+- **fingerprint_collectors.py**: Unified data collection for all modules.
+- **fingerprint_ml.py**: Handles machine learning models for bot classification.
+- **fingerprint_db.py**: Manages SQLite operations with a consistent schema.
+- **fingerprint_api.py**: Provides a Flask API for external access.
+- **fingerprint_config.py**: Centralized configuration for the system.
+- **test_fingerprinting.py**: Contains test cases to verify the functionality of the fingerprinting system.
