@@ -1,0 +1,94 @@
+```yaml
+version: '3.8'
+
+services:
+  # Main application service
+  quantum-nexus:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: quantum-nexus
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=change-this-in-production
+      - JWT_SECRET_KEY=change-this-jwt-key-in-production
+      - DATABASE_URL=sqlite:////app/data/quantum_nexus.db
+      - REDIS_URL=redis://redis:6379/0
+      - HONEYPOT_PORTS=80,443,22,21
+      - HONEYPOT_DOMAINS=example.com,secure.net
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/app/logs/quantum_nexus.log
+    volumes:
+      - quantum_nexus_data:/app/data
+      - quantum_nexus_logs:/app/logs
+      - quantum_nexus_backups:/app/backups
+    depends_on:
+      - redis
+      - database
+    networks:
+      - quantum_nexus_network
+    restart: unless-stopped
+
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: quantum-nexus-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - quantum_nexus_network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # Database service (PostgreSQL)
+  database:
+    image: postgres:15-alpine
+    container_name: quantum-nexus-db
+    environment:
+      POSTGRES_DB: quantum_nexus
+      POSTGRES_USER: quantum_user
+      POSTGRES_PASSWORD: quantum_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - quantum_nexus_network
+    restart: unless-stopped
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: quantum-nexus-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - quantum-nexus
+    networks:
+      - quantum_nexus_network
+    restart: unless-stopped
+
+volumes:
+  quantum_nexus_data:
+    driver: local
+  quantum_nexus_logs:
+    driver: local
+  quantum_nexus_backups:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  quantum_nexus_network:
+    driver: bridge
+```

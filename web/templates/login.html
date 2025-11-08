@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Quantum Deception Nexus</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <custom-navbar></custom-navbar>
+
+    <main class="min-h-screen flex items-center justify-center py-20">
+        <div class="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-700">
+            <!-- Logo/Header -->
+            <div class="text-center mb-8">
+                <div class="flex items-center justify-center mb-4">
+                    <i data-feather="shield" class="w-12 h-12 text-blue-400 mr-3"></i>
+                    <h1 class="text-3xl font-bold gradient-text">Quantum Nexus</h1>
+                </div>
+                <p class="text-gray-400">Advanced Honeypot System</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-300 mb-2">
+                        Username
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-feather="user" class="w-5 h-5 text-gray-500"></i>
+                        </div>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            required
+                            class="w-full pl-10 pr-3 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                            placeholder="Enter your username"
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-300 mb-2">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-feather="lock" class="w-5 h-5 text-gray-500"></i>
+                        </div>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            required
+                            class="w-full pl-10 pr-10 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                            placeholder="Enter your password"
+                        >
+                        <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200">
+                            <i data-feather="eye" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="remember"
+                            name="remember"
+                            class="w-4 h-4 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 text-blue-600"
+                        >
+                        <label for="remember" class="ml-2 block text-sm text-gray-300">
+                            Remember me
+                        </label>
+                    </div>
+                    <a href="#" class="text-sm text-blue-400 hover:text-blue-300">
+                        Forgot password?
+                    </a>
+                </div>
+
+                <!-- Error Message -->
+                <div id="error-message" class="hidden bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded-lg text-sm">
+                    <div class="flex items-center">
+                        <i data-feather="alert-circle" class="w-4 h-4 mr-2"></i>
+                        <span id="error-text"></span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button
+                    type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center"
+                >
+                    <span id="button-text">Sign In</span>
+                    <div id="button-spinner" class="hidden ml-2">
+                        <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                </button>
+            </form>
+
+            <!-- Register Link -->
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-400">
+                    Don't have an account?
+                    <a href="/register" class="text-blue-400 hover:text-blue-300 font-medium ml-1">
+                        Sign up
+                    </a>
+                </p>
+            </div>
+
+            <!-- Demo Credentials -->
+            <div class="mt-8 p-4 bg-gray-700 rounded-lg border border-gray-600">
+                <p class="text-xs text-gray-400 mb-2">Demo Credentials:</p>
+                <div class="text-xs text-gray-300 space-y-1">
+                    <p>Admin: admin / admin123</p>
+                    <p>Viewer: viewer / viewer123</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <custom-footer></custom-footer>
+
+    <script src="/static/components/navbar.js"></script>
+    <script src="/static/components/footer.js"></script>
+    <script src="/static/js/api-client.js"></script>
+    <script>
+        // Initialize feather icons
+        feather.replace();
+
+        // Toggle password visibility
+        const togglePassword = document.getElementById('toggle-password');
+        const passwordInput = document.getElementById('password');
+        
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            const icon = togglePassword.querySelector('i');
+            icon.setAttribute('data-feather', type === 'password' ? 'eye' : 'eye-off');
+            feather.replace();
+        });
+
+        // Handle form submission
+        const loginForm = document.getElementById('login-form');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const buttonText = document.getElementById('button-text');
+        const buttonSpinner = document.getElementById('button-spinner');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Show loading state
+            buttonText.textContent = 'Signing In...';
+            buttonSpinner.classList.remove('hidden');
+            loginForm.querySelector('button').disabled = true;
+            errorMessage.classList.add('hidden');
+
+            const formData = new FormData(loginForm);
+            const username = formData.get('username');
+            const password = formData.get('password');
+            const remember = formData.get('remember') === 'on';
+
+            try {
+                await apiClient.login(username, password, remember);
+                // Redirect to dashboard
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Login error:', error);
+                errorText.textContent = error.message || 'Invalid credentials';
+                errorMessage.classList.remove('hidden');
+            } finally {
+                // Reset button state
+                buttonText.textContent = 'Sign In';
+                buttonSpinner.classList.add('hidden');
+                loginForm.querySelector('button').disabled = false;
+            }
+        });
+
+        // Check if already authenticated
+        if (apiClient.isAuthenticated()) {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

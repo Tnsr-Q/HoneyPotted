@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Settings - Quantum Deception Nexus</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <custom-navbar></custom-navbar>
+
+    <main class="py-8 min-h-screen">
+        <div class="container mx-auto px-6">
+            <!-- Header -->
+            <div class="bg-gray-800 rounded-2xl p-6 mb-8 border border-gray-700">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold gradient-text mb-2">System Settings</h1>
+                        <p class="text-gray-400">Configure honeypot behavior and system parameters</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="window.history.back()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                            <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i>
+                            Back
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tabs -->
+            <div class="bg-gray-800 rounded-2xl border border-gray-700 mb-8">
+                <div class="border-b border-gray-700">
+                    <nav class="flex overflow-x-auto">
+                        <button class="settings-tab active px-6 py-4 text-sm font-medium border-b-2 border-blue-500" data-tab="honeypot">
+                            Honeypot
+                        </button>
+                        <button class="settings-tab px-6 py-4 text-sm font-medium text-gray-400 hover:text-white" data-tab="challenge">
+                            Challenge System
+                        </button>
+                        <button class="settings-tab px-6 py-4 text-sm font-medium text-gray-400 hover:text-white" data-tab="verification">
+                            Verification
+                        </button>
+                        <button class="settings-tab px-6 py-4 text-sm font-medium text-gray-400 hover:text-white" data-tab="sandbox">
+                            Sandbox
+                        </button>
+                        <button class="settings-tab px-6 py-4 text-sm font-medium text-gray-400 hover:text-white" data-tab="alerts">
+                            Alerts
+                        </button>
+                        <button class="settings-tab px-6 py-4 text-sm font-medium text-gray-400 hover:text-white" data-tab="api">
+                            API Keys
+                        </button>
+                        <button class="settings-tab px-6 py-4 text-sm font-medium text-gray-400 hover:text-white" data-tab="users">
+                            Users
+                        </button>
+                        <button class="settings-tab px-6 py-4 text-sm font-medium text-gray-400 hover:text-white" data-tab="backup">
+                            Backup & Restore
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <!-- Honeypot Settings -->
+                    <div class="settings-content active" id="honeypot-content">
+                        <h2 class="text-xl font-bold mb-6 flex items-center">
+                            <i data-feather="settings" class="w-5 h-5 mr-2 text-blue-400"></i>
+                            Honeypot Configuration
+                        </h2>
+                        
+                        <form id="honeypot-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Ports</label>
+                                    <input type="text" id="honeypot-ports" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" placeholder="80,443,22,21">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Domains</label>
+                                    <input type="text" id="honeypot-domains" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" placeholder="example.com,secure.net">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Detection Threshold</label>
+                                    <input type="range" id="detection-threshold" min="0" max="1" step="0.01" class="w-full">
+                                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                        <span>Low</span>
+                                        <span id="threshold-value">0.5</span>
+                                        <span>High</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Max Concurrent Bots</label>
+                                    <input type="number" id="max-concurrent-bots" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" value="100">
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center">
+                                    <i data-feather="save" class="w-4 h-4 mr-2"></i>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Challenge Settings -->
+                    <div class="settings-content hidden" id="challenge-content">
+                        <h2 class="text-xl font-bold mb-6 flex items-center">
+                            <i data-feather="cpu" class="w-5 h-5 mr-2 text-green-400"></i>
+                            Challenge System Settings
+                        </h2>
+                        
+                        <form id="challenge-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Difficulty Level</label>
+                                    <select id="challenge-difficulty" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                                        <option value="easy">Easy</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="hard">Hard</option>
+                                        <option value="expert">Expert</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Task Types</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="mr-2" checked>
+                                            <span class="text-sm">Computational Tasks</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="mr-2" checked>
+                                            <span class="text-sm">Behavioral Challenges</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" class="mr-2" checked>
+                                            <span class="text-sm">Captcha Challenges</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Time Limit (seconds)</label>
+                                    <input type="number" id="challenge-time-limit" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" value="300">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Retry Attempts</label>
+                                    <input type="number" id="challenge-retries" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" value="3">
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center">
+                                    <i data-feather="save" class="w-4 h-4 mr-2"></i>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Verification Settings -->
+                    <div class="settings-content hidden" id="verification-content">
+                        <h2 class="text-xl font-bold mb-6 flex items-center">
+                            <i data-feather="shield" class="w-5 h-5 mr-2 text-purple-400"></i>
+                            Verification Parameters
+                        </h2>
+                        
+                        <form id="verification-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Consensus Threshold</label>
+                                    <input type="range" id="consensus-threshold" min="0" max="1" step="0.01" class="w-full" value="0.8">
+                                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                        <span>Low</span>
+                                        <span id="consensus-value">0.8</span>
+                                        <span>High</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Worker Reliability Score</label>
+                                    <input type="range" id="worker-reliability" min="0" max="1" step="0.01" class="w-full" value="0.9">
+                                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                        <span>Low</span>
+                                        <span id="reliability-value">0.9</span>
+                                        <span>High</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Verification Timeout (seconds)</label>
+                                    <input type="number" id="verification-timeout" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" value="60">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Max Verification Workers</label>
+                                    <input type="number" id="max-verification-workers" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" value="10">
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center">
+                                    <i data-feather="save" class="w-4 h-4 mr-2"></i>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Sandbox Settings -->
+                    <div class="settings-content hidden" id="sandbox-content">
+                        <h2 class="text-xl font-bold mb-6 flex items-center">
+                            <i data-feather="box" class="w-5 h-5 mr-2 text-yellow-400"></i>
+                            Sandbox Resource Limits
+                        </h2>
+                        
+                        <form id="sandbox-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">CPU Limit (%)</label>
+                                    <input type="number" id="sandbox-cpu-limit" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" value="50" min="1" max="100">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Memory Limit (MB)</label>
+                                    <input type="number" id="sandbox-memory-limit" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" value="512" min="64">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Timeout (seconds)</label>
+                                    <input type="number" id="sandbox-timeout" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" value="300" min="10">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Network Isolation</label>
+                                    <select id="network-isolation" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                                        <option value="full">Full Isolation</option>
+                                        <option value="partial" selected>Partial Access</option>
+                                        <option value="none">No Restrictions</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center">
+                                    <i data-feather="save" class="w-4 h-4 mr-2"></i>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Alerts Settings -->
+                    <div class="settings-content hidden" id="alerts-content">
+                        <h2 class="text-xl font-bold mb-6 flex items-center">
+                            <i data-feather="bell" class="w-5 h-5 mr-2 text-red-400"></i>
+                            Alert Configuration
+                        </h2>
+                        
+                        <form id="alerts-form" class="space-y-6">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Email Alerts</label>
+                                    <input type="email" id="alert-email" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" placeholder="admin@example.com">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Webhook URL</label>
+                                    <input type="url" id="alert-webhook" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" placeholder="https://hooks.slack.com/services/...">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Alert Threshold</label>
+                                    <select id="alert-threshold" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                                        <option value="low">Low (All detections)</option>
+                                        <option value="medium" selected>Medium (High confidence)</option>
+                                        <option value="high">High (Only confirmed bots)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="enable-slack" class="mr-2">
+                                        <span class="text-sm">Enable Slack Integration</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors flex items-center">
+                                    <i data-feather="save" class="w-4 h-4 mr-2"></i>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- API Keys -->
+                    <div class="settings-content hidden" id="api-content">
+                        <h2 class="text-xl font-bold mb-6 flex items-center">
+                            <i data-feather="key" class="w-5 h-5 mr-2 text-indigo-400"></i>
+                            API Key Management
+                        </h2>
+                        
+                        <div class="mb-6">
+                            <button id="generate-api-key" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                                <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+                                Generate New Key
+                            </button>
+                        </div>
+                        
+                        <div class="bg-gray-750 rounded-lg border border-gray-700">
+                            <div class="border-b border-gray-700 px-4 py-3 flex items-center">
+                                <div class="w-1/3 text-sm font-medium text-gray-400">Key Name</div>
+                                <div class="w-1/3 text-sm font-medium text-gray-400">Created</div>
+                                <div class="w-1/3 text-sm font-medium text-gray-400 text-right">Actions</div>
+                            </div>
+                            <div id="api-keys-list" class="divide-y divide-gray-700">
+                                <!-- API keys will be populated here -->
+                                <div class="px-4 py-6 text-center text-gray-500">
+                                    No API keys found. Generate one to get started.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Users -->
+                    <div class="settings-content hidden" id="users-content">
+                        <h2 class="text-xl font-bold mb-6 flex items-center">
+                            <i data-feather="users" class="w-5 h-5 mr-2 text-teal-400"></i>
+                            User Management
+                        </h2>
+                        
+                        <div class="mb-6">
+                            <button id="add-user" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                                <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+                                Add New User
+                            </button>
+                        </div>
+                        
+                        <div class="bg-gray-750 rounded-lg border border-gray-700">
+                            <div class="border-b border-gray-700 px-4 py-3 flex items-center">
+                                <div class="w-1/4 text-sm font-medium text-gray-400">Username</div>
+                                <div class="w-1/4 text-sm font-medium text-gray-400">Email</div>
+                                <div class="w-1/4 text-sm font-medium text-gray-400">Role</div>
+                                <div class="w-1/4 text-sm font-medium text-gray-400 text-right">Actions</div>
+                            </div>
+                            <div id="users-list" class="divide-y divide-gray-700">
+                                <!-- Users will be populated here -->
+                                <div class="px-4 py-6 text-center text-gray-500">
+                                    No users found.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Backup & Restore -->
+                    <div class="settings-content hidden" id="backup-content">
+                        <h2 class="text-xl font-bold mb-6 flex items-center">
+                            <i data-feather="database" class="w-5 h-5 mr-2 text-pink-400"></i>
+                            Backup & Restore
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-gray-750 rounded-lg p-6 border border-gray-700">
+                                <h3 class="text-lg font-medium mb-4">Create Backup</h3>
+                                <p class="text-gray-400 text-sm mb-4">Create a backup of your current configuration and data.</p>
+                                <button id="create-backup" class="w-full bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Create Backup Now
+                                </button>
+                            </div>
+                            
+                            <div class="bg-gray-750 rounded-lg p-6 border border-gray-700">
+                                <h3 class="text-lg font-medium mb-4">Restore Backup</h3>
+                                <p class="text-gray-400 text-sm mb-4">Restore system from a previous backup file.</p>
+                                <div class="flex items-center">
+                                    <input type="file" id="restore-file" class="hidden">
+                                    <label for="restore-file" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-center cursor-pointer">
+                                        Select Backup File
+                                    </label>
+                                    <button id="restore-backup" class="ml-2 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                        Restore
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8">
+                            <h3 class="text-lg font-medium mb-4">Recent Backups</h3>
+                            <div class="bg-gray-750 rounded-lg border border-gray-700">
+                                <div class="border-b border-gray-700 px-4 py-3 flex items-center">
+                                    <div class="w-1/3 text-sm font-medium text-gray-400">Backup Name</div>
+                                    <div class="w-1/3 text-sm font-medium text-gray-400">Date</div>
+                                    <div class="w-1/3 text-sm font-medium text-gray-400 text-right">Actions</div>
+                                </div>
+                                <div id="backups-list" class="divide-y divide-gray-700">
+                                    <!-- Backups will be populated here -->
+                                    <div class="px-4 py-6 text-center text-gray-500">
+                                        No backups found.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <custom-footer></custom-footer>
+
+    <script src="/static/components/navbar.js"></script>
+    <script src="/static/components/footer.js"></script>
+    <script src="/static/js/api-client.js"></script>
+    <script src="/static/js/settings-manager.js"></script>
+    <script>
+        // Initialize feather icons
+        feather.replace();
+
+        // Initialize settings manager
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof SettingsManager !== 'undefined') {
+                window.settingsManager = new SettingsManager();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs - Quantum Deception Nexus</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <custom-navbar></custom-navbar>
+
+    <main class="py-8 min-h-screen">
+        <div class="container mx-auto px-6">
+            <!-- Header -->
+            <div class="bg-gray-800 rounded-2xl p-6 mb-8 border border-gray-700">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold gradient-text mb-2">System Logs</h1>
+                        <p class="text-gray-400">Real-time monitoring and historical log analysis</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div id="connection-status" class="w-3 h-3 bg-gray-500 rounded-full" title="Connection Status"></div>
+                        <button onclick="window.history.back()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                            <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i>
+                            Back
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters and Controls -->
+            <div class="bg-gray-800 rounded-2xl p-6 mb-8 border border-gray-700">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- Search -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Search</label>
+                        <div class="relative">
+                            <input
+                                type="text"
+                                id="search-input"
+                                placeholder="Search logs..."
+                                class="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                            >
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i data-feather="search" class="w-4 h-4 text-gray-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Log Level Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Log Level</label>
+                        <select id="level-filter" class="w-full py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                            <option value="all">All Levels</option>
+                            <option value="DEBUG">DEBUG</option>
+                            <option value="INFO">INFO</option>
+                            <option value="WARNING">WARNING</option>
+                            <option value="ERROR">ERROR</option>
+                            <option value="CRITICAL">CRITICAL</option>
+                        </select>
+                    </div>
+
+                    <!-- Component Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Component</label>
+                        <select id="component-filter" class="w-full py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                            <option value="all">All Components</option>
+                            <option value="fingerprinting">Fingerprinting</option>
+                            <option value="challenge">Challenge</option>
+                            <option value="verification">Verification</option>
+                            <option value="sandbox">Sandbox</option>
+                            <option value="api">API</option>
+                            <option value="websocket">WebSocket</option>
+                            <option value="scheduler">Scheduler</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Date Range</label>
+                        <input type="text" id="date-range" placeholder="Select date range" class="w-full py-2 px-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-3">
+                    <button id="refresh-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i data-feather="refresh-cw" class="w-4 h-4 mr-2"></i>
+                        Refresh
+                    </button>
+                    <button id="clear-btn" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i data-feather="trash-2" class="w-4 h-4 mr-2"></i>
+                        Clear Filters
+                    </button>
+                    <button id="export-csv" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i data-feather="download" class="w-4 h-4 mr-2"></i>
+                        Export CSV
+                    </button>
+                    <button id="export-json" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i data-feather="download" class="w-4 h-4 mr-2"></i>
+                        Export JSON
+                    </button>
+                    <button id="export-txt" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                        <i data-feather="download" class="w-4 h-4 mr-2"></i>
+                        Export TXT
+                    </button>
+                    <div class="flex items-center ml-auto">
+                        <label class="flex items-center text-sm text-gray-300 mr-4">
+                            <input type="checkbox" id="auto-scroll" class="mr-2" checked>
+                            Auto Scroll
+                        </label>
+                        <label class="flex items-center text-sm text-gray-300">
+                            <input type="checkbox" id="regex-toggle" class="mr-2">
+                            Regex Search
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs Container -->
+            <div class="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
+                <div id="logs-header" class="bg-gray-750 border-b border-gray-700 px-6 py-3 flex items-center">
+                    <div class="w-1/12 text-xs text-gray-400 font-medium">Timestamp</div>
+                    <div class="w-2/12 text-xs text-gray-400 font-medium">Level</div>
+                    <div class="w-2/12 text-xs text-gray-400 font-medium">Component</div>
+                    <div class="w-7/12 text-xs text-gray-400 font-medium">Message</div>
+                </div>
+                <div id="logs-container" class="h-[calc(100vh-350px)] overflow-y-auto font-mono text-sm">
+                    <!-- Logs will be populated here -->
+                    <div id="no-logs" class="text-center py-12 text-gray-500">
+                        <i data-feather="info" class="w-12 h-12 mx-auto text-gray-600 mb-4"></i>
+                        <p>No logs to display. Connect to start receiving logs.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="flex justify-between items-center mt-6">
+                <div class="text-gray-400 text-sm">
+                    Showing <span id="showing-count">0</span> of <span id="total-count">0</span> logs
+                </div>
+                <div class="flex space-x-2">
+                    <button id="prev-page" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50" disabled>
+                        Previous
+                    </button>
+                    <button id="next-page" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50" disabled>
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <custom-footer></custom-footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/static/components/navbar.js"></script>
+    <script src="/static/components/footer.js"></script>
+    <script src="/static/js/api-client.js"></script>
+    <script src="/static/js/logs-viewer.js"></script>
+    <script>
+        // Initialize feather icons
+        feather.replace();
+
+        // Initialize logs viewer
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof LogsViewer !== 'undefined') {
+                window.logsViewer = new LogsViewer();
+            }
+        });
+    </script>
+</body>
+</html>
