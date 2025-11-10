@@ -9,6 +9,14 @@ from typing import Dict, Any
 
 DEFAULT_DB_PATH = Path("quantum_nexus.db")
 
+# Sandbox scoring constants
+BASE_SCORE_SUCCESS = 0.7  # Base score for successful sandbox execution
+BASE_SCORE_FAILURE = 0.1  # Base score for failed sandbox execution
+MAX_CPU_TIME_SECONDS = 30.0  # Maximum expected CPU time before penalty applies
+MAX_CPU_PENALTY = 0.4  # Maximum penalty for excessive CPU time
+MAX_MEMORY_KB = 51200.0  # Maximum expected memory usage (50 MB) before penalty applies
+MAX_MEMORY_PENALTY = 0.3  # Maximum penalty for excessive memory usage
+
 
 class VerificationAPI:
     """Aggregates evidence from multiple subsystems to verify a bot."""
@@ -112,9 +120,9 @@ class VerificationAPI:
             row = cursor.fetchone()
             if not row:
                 return {"score": 0.0}
-            base = 0.7 if row["success"] else 0.1
-            resource_penalty = min((row["cpu_time"] or 0) / 30.0, 0.4)
-            memory_penalty = min((row["memory_kb"] or 0) / 51200.0, 0.3)
+            base = BASE_SCORE_SUCCESS if row["success"] else BASE_SCORE_FAILURE
+            resource_penalty = min((row["cpu_time"] or 0) / MAX_CPU_TIME_SECONDS, MAX_CPU_PENALTY)
+            memory_penalty = min((row["memory_kb"] or 0) / MAX_MEMORY_KB, MAX_MEMORY_PENALTY)
             return {"score": max(0.0, base - resource_penalty - memory_penalty)}
         finally:
             conn.close()
