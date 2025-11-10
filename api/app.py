@@ -145,8 +145,8 @@ def init_db():
         db.commit()
         logger.info("Database initialized successfully")
         
-        # Initialize honeypot integrator database
-        honeypot_integrator._init_database()
+        # Ensure honeypot integration schema is available
+        honeypot_integrator.ensure_schema()
 # Routes
 @app.route('/')
 @limiter.exempt
