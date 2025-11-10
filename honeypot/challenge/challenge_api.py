@@ -68,7 +68,7 @@ class ChallengeAPI:
             "challenge_id": challenge_id,
             "success": success,
             "score": score,
-            "time_taken": response.get("time_taken" if isinstance(response, dict) else "time_taken", None),
+            "time_taken": response.get("time_taken", None) if isinstance(response, dict) else None,
         }
 
     # ------------------------------------------------------------------
