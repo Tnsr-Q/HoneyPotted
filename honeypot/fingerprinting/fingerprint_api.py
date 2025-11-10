@@ -43,12 +43,32 @@ class FingerprintAPI:
     # Public API
     # ------------------------------------------------------------------
     def analyze_fingerprint(self, fingerprint_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyse an incoming fingerprint payload.
+        """
+        Analyse an incoming fingerprint payload.
 
         The method normalises the payload, persists the raw event for
         observability and returns a detection score that can be consumed by
-        higher level services.  The scoring model is intentionally
+        higher level services. The scoring model is intentionally
         transparent so that it can be audited in production.
+
+        Parameters
+        ----------
+        fingerprint_data : Dict[str, Any]
+            Dictionary containing fingerprint information. Expected keys:
+                - "fingerprint_hash" (str, optional): Unique hash for the fingerprint. If not provided, it will be derived from the payload.
+                - "ip" (str, optional): IP address of the client.
+                - "user_agent" (str, optional): User agent string of the client.
+                - Additional keys may be present and will be used for scoring and analysis.
+            All values should be JSON-serializable.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary containing the analysis result, including:
+                - "fingerprint_hash": str
+                - "detection_score": float
+                - "components": Dict[str, Any]
+                - "metadata": Dict[str, Any]
         """
 
         payload = fingerprint_data or {}
