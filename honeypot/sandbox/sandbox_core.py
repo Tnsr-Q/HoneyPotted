@@ -103,25 +103,36 @@ class SandboxCore:
 
             try:
                 # Execute in isolated subprocess with timeout
-                # The subprocess provides the actual isolation barrier
-                result = subprocess.run(
-                    [sys.executable, tmp_path],
-                    capture_output=True,
+                # Using Popen to properly capture partial output on timeout
+                # The -u flag forces unbuffered stdout/stderr for better partial output capture
+                process = subprocess.Popen(
+                    [sys.executable, '-u', tmp_path],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                     text=True,
-                    timeout=self.timeout,
                     # Additional security: limit environment variables
                     env={'PYTHONHASHSEED': '0', 'PATH': ''}
                 )
                 
-                output = result.stdout.strip()
-                
-                if result.returncode != 0:
-                    success = False
-                    error_message = result.stderr.strip() or f"Process exited with code {result.returncode}"
+                try:
+                    stdout, stderr = process.communicate(timeout=self.timeout)
+                    output = stdout.strip()
                     
-            except subprocess.TimeoutExpired:
-                success = False
-                error_message = f"Execution timed out after {self.timeout} seconds"
+                    if process.returncode != 0:
+                        success = False
+                        error_message = stderr.strip() or f"Process exited with code {process.returncode}"
+                        
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    # Collect any partial output that was captured before timeout
+                    stdout, stderr = process.communicate()
+                    success = False
+                    if stdout:
+                        output = stdout.strip()
+                    if stderr:
+                        error_message = stderr.strip()
+                    if not error_message:
+                        error_message = f"Execution timed out after {self.timeout} seconds"
             except Exception as exc:
                 success = False
                 error_message = f"Subprocess error: {str(exc)}"
@@ -137,7 +148,7 @@ class SandboxCore:
             error_message = f"Sandbox setup error: {str(exc)}"
 
         cpu_time = time.perf_counter() - start_time
-        memory_kb = len(code.encode("utf-8")) / 1024.0
+        code_size_kb = len(code.encode("utf-8")) / 1024.0
 
         result_dict = {
             "fingerprint_hash": fingerprint_hash,
@@ -145,7 +156,7 @@ class SandboxCore:
             "output": output,
             "error": error_message,
             "cpu_time": round(cpu_time, 4),
-            "memory_kb": round(memory_kb, 4),
+            "memory_kb": round(code_size_kb, 4),
         }
 
         self._persist_run(result_dict, code)
