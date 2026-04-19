@@ -27,9 +27,11 @@ import random
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 # Initialize Flask app
-app = Flask(__name__, 
-            template_folder='web/templates', 
-            static_folder='web/static',
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+app = Flask(__name__,
+            template_folder=os.path.join(BASE_DIR, 'web', 'templates'),
+            static_folder=os.path.join(BASE_DIR, 'web', 'static'),
             static_url_path='/static')
 
 # Configuration
