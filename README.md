@@ -1,3 +1,5 @@
+<img src="https://github.com/user-attachments/assets/83dfdf36-bf49-4ba4-ba4d-e1601b281444">
+
 # Claude Mythos × HoneyPotted
 
 ## Adversarial LLM–Honeypot Evaluation Framework
