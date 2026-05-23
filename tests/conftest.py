@@ -1,5 +1,8 @@
 import pytest
+import os
 from flask import Flask
+
+os.environ.setdefault('CHALLENGE_SECRET_KEY', 'test_challenge_secret_key')
 from honeypot.adapters.driving.challenge_api import challenge_bp
 
 @pytest.fixture

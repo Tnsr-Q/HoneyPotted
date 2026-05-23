@@ -364,27 +364,26 @@ def database_cleanup():
         if not os.path.exists(db_path):
             db_path = 'quantum_nexus.db'
 
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
 
-        # In a real setup, we would delete logs older than 14 days,
-        # expired challenge sessions (> 1 hour), and inactive bot fingerprints (> 7 days).
-        # Since we might not have all tables created yet, we use IF EXISTS logic or ignore errors.
+            # In a real setup, we would delete logs older than 14 days,
+            # expired challenge sessions (> 1 hour), and inactive bot fingerprints (> 7 days).
+            # Since we might not have all tables created yet, we use IF EXISTS logic or ignore errors.
 
-        # 1. Clean old logs
-        try:
-            cursor.execute("DELETE FROM system_logs WHERE timestamp < datetime('now', '-14 days')")
-        except sqlite3.OperationalError:
-            pass # Table might not exist
+            # 1. Clean old logs
+            try:
+                cursor.execute("DELETE FROM system_logs WHERE timestamp < datetime('now', '-14 days')")
+            except sqlite3.OperationalError:
+                pass # Table might not exist
 
-        # 2. Clean inactive bots
-        try:
-            cursor.execute("DELETE FROM bots WHERE last_seen < datetime('now', '-7 days')")
-        except sqlite3.OperationalError:
-            pass
+            # 2. Clean inactive bots
+            try:
+                cursor.execute("DELETE FROM bots WHERE last_seen < datetime('now', '-7 days')")
+            except sqlite3.OperationalError:
+                pass
 
-        conn.commit()
-        conn.close()
+            conn.commit()
         logger.info("Database cleanup completed successfully")
     except Exception as e:
         logger.error(f"Database cleanup failed: {e}")
@@ -397,31 +396,30 @@ def aggregate_statistics():
         if not os.path.exists(db_path):
             db_path = 'quantum_nexus.db'
 
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
 
-        # Try to ensure metrics table exists
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS aggregated_metrics (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                metric_name TEXT,
-                metric_value REAL
-            )
-        ''')
+            # Try to ensure metrics table exists
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS aggregated_metrics (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    metric_name TEXT,
+                    metric_value REAL
+                )
+            ''')
 
-        # Gather stats (stubs for the MVP if tables don't exist)
-        try:
-            cursor.execute("SELECT COUNT(*) FROM challenges WHERE created_at >= datetime('now', '-5 minutes')")
-            recent_challenges = cursor.fetchone()[0]
-        except sqlite3.OperationalError:
-            recent_challenges = 0
+            # Gather stats (stubs for the MVP if tables don't exist)
+            try:
+                cursor.execute("SELECT COUNT(*) FROM challenges WHERE created_at >= datetime('now', '-5 minutes')")
+                recent_challenges = cursor.fetchone()[0]
+            except sqlite3.OperationalError:
+                recent_challenges = 0
 
-        cursor.execute("INSERT INTO aggregated_metrics (metric_name, metric_value) VALUES (?, ?)",
-                       ('challenges_issued_last_5min', recent_challenges))
+            cursor.execute("INSERT INTO aggregated_metrics (metric_name, metric_value) VALUES (?, ?)",
+                           ('challenges_issued_last_5min', recent_challenges))
 
-        conn.commit()
-        conn.close()
+            conn.commit()
         logger.info("Statistics aggregation completed successfully")
     except Exception as e:
         logger.error(f"Statistics aggregation failed: {e}")
@@ -431,6 +429,11 @@ def monitor_system_health():
     logger.info("Running system health monitoring task")
     try:
         health_status = {'status': 'healthy', 'checks': {}}
+
+        def set_worst_status(candidate_status):
+            status_priority = {'healthy': 0, 'degraded': 1, 'unhealthy': 2}
+            if status_priority[candidate_status] > status_priority[health_status['status']]:
+                health_status['status'] = candidate_status
 
         # 1. SQLite check
         db_path = os.environ.get('DATABASE', '/app/data/quantum_nexus.db')
@@ -442,7 +445,7 @@ def monitor_system_health():
             conn.close()
             health_status['checks']['database'] = 'OK'
         except Exception as e:
-            health_status['status'] = 'unhealthy'
+            set_worst_status('unhealthy')
             health_status['checks']['database'] = f'Error: {e}'
 
         # 2. Redis check
@@ -453,7 +456,7 @@ def monitor_system_health():
             r.ping()
             health_status['checks']['redis'] = 'OK'
         except Exception as e:
-            health_status['status'] = 'degraded'
+            set_worst_status('degraded')
             health_status['checks']['redis'] = f'Error: {e}'
 
         # 3. Disk space check
@@ -463,7 +466,7 @@ def monitor_system_health():
             total, used, free = shutil.disk_usage(data_dir)
             free_mb = free // (2**20)
             if free_mb < 500:
-                health_status['status'] = 'unhealthy'
+                set_worst_status('unhealthy')
                 health_status['checks']['disk'] = f'Low disk space: {free_mb}MB free'
             else:
                 health_status['checks']['disk'] = 'OK'

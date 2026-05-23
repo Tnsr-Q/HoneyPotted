@@ -5,11 +5,15 @@ import json
 import base64
 import logging
 import time
+import os
+import secrets
 
 logger = logging.getLogger('quantum_nexus.challenge')
 
 challenge_bp = Blueprint('challenge', __name__)
-SECRET_KEY = 'super_secret_challenge_key' # for MVP
+SECRET_KEY = os.environ.get('CHALLENGE_SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError('CHALLENGE_SECRET_KEY environment variable must be set')
 
 def create_hmac(challenge_data, secret_key):
     message = json.dumps(challenge_data, sort_keys=True).encode()
@@ -30,9 +34,14 @@ def generate_challenge_route():
             'timestamp': int(time.time()),
             'timeout': 180
         }
-        hmac_value = create_hmac(challenge_data, SECRET_KEY)
+        challenge_id = "chal_" + secrets.token_hex(16)
+        hmac_payload = {
+            'challenge_id': challenge_id,
+            'data': challenge_data
+        }
+        hmac_value = create_hmac(hmac_payload, SECRET_KEY)
         return jsonify({
-            "challenge_id": "chal_" + hashlib.md5(str(time.time()).encode()).hexdigest(),
+            "challenge_id": challenge_id,
             "data": challenge_data,
             "hmac": hmac_value
         })
@@ -53,7 +62,12 @@ def verify_challenge_route():
         if not all([challenge_id, response, hmac_value, challenge_data]):
              return jsonify({"error": "Missing required fields"}), 400
 
-        if not verify_hmac(challenge_data, hmac_value, SECRET_KEY):
+        hmac_payload = {
+            'challenge_id': challenge_id,
+            'data': challenge_data
+        }
+
+        if not verify_hmac(hmac_payload, hmac_value, SECRET_KEY):
             return jsonify({"error": "HMAC verification failed"}), 400
 
         # Verify answer

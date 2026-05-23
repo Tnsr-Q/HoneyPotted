@@ -1,5 +1,6 @@
 import pytest
 import json
+import copy
 
 def test_full_challenge_loop(client):
     # Simulate bot -> fingerprint (skipped as we only test the challenge API here for now) -> challenge -> verify
@@ -49,7 +50,7 @@ def test_full_challenge_loop(client):
     assert verify_data_wrong['success'] is False
 
     # 4. Tamper with the payload (invalid HMAC)
-    tampered_payload = verify_payload.copy()
+    tampered_payload = copy.deepcopy(verify_payload)
     tampered_payload['data']['numbers'] = [1, 1] # changed data
 
     verify_res_tamper = client.post('/api/challenge/verify', json=tampered_payload)
