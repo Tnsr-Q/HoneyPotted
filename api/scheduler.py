@@ -438,11 +438,10 @@ def monitor_system_health():
         # 1. SQLite check
         db_path = os.environ.get('DATABASE', '/app/data/quantum_nexus.db')
         if not os.path.exists(db_path):
-             db_path = 'quantum_nexus.db'
+            db_path = 'quantum_nexus.db'
         try:
-            conn = sqlite3.connect(db_path)
-            conn.execute("SELECT 1").fetchone()
-            conn.close()
+            with sqlite3.connect(db_path) as conn:
+                conn.execute("SELECT 1").fetchone()
             health_status['checks']['database'] = 'OK'
         except Exception as e:
             set_worst_status('unhealthy')

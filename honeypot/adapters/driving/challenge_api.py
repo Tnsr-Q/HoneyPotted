@@ -45,9 +45,9 @@ def generate_challenge_route():
             "data": challenge_data,
             "hmac": hmac_value
         })
-    except Exception as e:
-        logger.error(f"Error generating challenge: {e}")
-        return jsonify({"error": str(e)}), 400
+    except Exception:
+        logger.exception("Error generating challenge")
+        return jsonify({"error": "Failed to generate challenge"}), 400
 
 @challenge_bp.route('/verify', methods=['POST'])
 def verify_challenge_route():
@@ -89,6 +89,6 @@ def verify_challenge_route():
             "challenge_id": challenge_id,
             "success": success
         })
-    except Exception as e:
-         logger.error(f"Error verifying challenge: {e}")
-         return jsonify({"error": str(e)}), 400
+    except Exception:
+        logger.exception("Error verifying challenge")
+        return jsonify({"error": "Failed to verify challenge"}), 400
