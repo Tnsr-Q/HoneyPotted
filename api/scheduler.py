@@ -1,4 +1,5 @@
-```python
+import os
+
 """
 Background task scheduler for Quantum Deception Nexus.
 Handles periodic tasks like cleanup, statistics, and monitoring.
@@ -354,21 +355,124 @@ class TaskScheduler:
             logger.error(f"Failed to get task logs: {e}")
             return []
 
-# Example scheduled tasks
+# Scheduled tasks implementations
 def database_cleanup():
     """Clean up old database records."""
     logger.info("Running database cleanup task")
-    # Implementation would go here
+    try:
+        db_path = os.environ.get('DATABASE', '/app/data/quantum_nexus.db')
+        if not os.path.exists(db_path):
+            db_path = 'quantum_nexus.db'
+
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+
+            # In a real setup, we would delete logs older than 14 days,
+            # expired challenge sessions (> 1 hour), and inactive bot fingerprints (> 7 days).
+            # Since we might not have all tables created yet, we use IF EXISTS logic or ignore errors.
+
+            # 1. Clean old logs
+            try:
+                cursor.execute("DELETE FROM system_logs WHERE timestamp < datetime('now', '-14 days')")
+            except sqlite3.OperationalError:
+                pass # Table might not exist
+
+            # 2. Clean inactive bots
+            try:
+                cursor.execute("DELETE FROM bots WHERE last_seen < datetime('now', '-7 days')")
+            except sqlite3.OperationalError:
+                pass
+
+            conn.commit()
+        logger.info("Database cleanup completed successfully")
+    except Exception as e:
+        logger.error(f"Database cleanup failed: {e}")
 
 def aggregate_statistics():
     """Aggregate system statistics."""
     logger.info("Running statistics aggregation task")
-    # Implementation would go here
+    try:
+        db_path = os.environ.get('DATABASE', '/app/data/quantum_nexus.db')
+        if not os.path.exists(db_path):
+            db_path = 'quantum_nexus.db'
+
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+
+            # Try to ensure metrics table exists
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS aggregated_metrics (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    metric_name TEXT,
+                    metric_value REAL
+                )
+            ''')
+
+            # Gather stats (stubs for the MVP if tables don't exist)
+            try:
+                cursor.execute("SELECT COUNT(*) FROM challenges WHERE created_at >= datetime('now', '-5 minutes')")
+                recent_challenges = cursor.fetchone()[0]
+            except sqlite3.OperationalError:
+                recent_challenges = 0
+
+            cursor.execute("INSERT INTO aggregated_metrics (metric_name, metric_value) VALUES (?, ?)",
+                           ('challenges_issued_last_5min', recent_challenges))
+
+            conn.commit()
+        logger.info("Statistics aggregation completed successfully")
+    except Exception as e:
+        logger.error(f"Statistics aggregation failed: {e}")
 
 def monitor_system_health():
     """Monitor system health."""
     logger.info("Running system health monitoring task")
-    # Implementation would go here
+    try:
+        health_status = {'status': 'healthy', 'checks': {}}
+
+        def set_worst_status(candidate_status):
+            status_priority = {'healthy': 0, 'degraded': 1, 'unhealthy': 2}
+            if status_priority[candidate_status] > status_priority[health_status['status']]:
+                health_status['status'] = candidate_status
+
+        # 1. SQLite check
+        db_path = os.environ.get('DATABASE', '/app/data/quantum_nexus.db')
+        if not os.path.exists(db_path):
+            db_path = 'quantum_nexus.db'
+        try:
+            with sqlite3.connect(db_path) as conn:
+                conn.execute("SELECT 1").fetchone()
+            health_status['checks']['database'] = 'OK'
+        except Exception as e:
+            set_worst_status('unhealthy')
+            health_status['checks']['database'] = f'Error: {e}'
+
+        # 2. Redis check
+        import redis
+        redis_url = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+        try:
+            r = redis.from_url(redis_url, socket_timeout=1)
+            r.ping()
+            health_status['checks']['redis'] = 'OK'
+        except Exception as e:
+            set_worst_status('degraded')
+            health_status['checks']['redis'] = f'Error: {e}'
+
+        # 3. Disk space check
+        import shutil
+        data_dir = os.path.dirname(db_path) if os.path.dirname(db_path) else '.'
+        if os.path.exists(data_dir):
+            total, used, free = shutil.disk_usage(data_dir)
+            free_mb = free // (2**20)
+            if free_mb < 500:
+                set_worst_status('unhealthy')
+                health_status['checks']['disk'] = f'Low disk space: {free_mb}MB free'
+            else:
+                health_status['checks']['disk'] = 'OK'
+
+        logger.info(f"System health check completed. Status: {health_status['status']}")
+    except Exception as e:
+        logger.error(f"System health monitoring failed: {e}")
 
 def generate_reports():
     """Generate automated reports."""

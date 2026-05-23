@@ -1,4 +1,3 @@
-```yaml
 version: '3.8'
 
 services:
@@ -25,7 +24,6 @@ services:
       - quantum_nexus_backups:/app/backups
     depends_on:
       - redis
-      - database
     networks:
       - quantum_nexus_network
     restart: unless-stopped
@@ -42,23 +40,6 @@ services:
       - quantum_nexus_network
     restart: unless-stopped
     command: redis-server --appendonly yes
-
-  # Database service (PostgreSQL)
-  database:
-    image: postgres:15-alpine
-    container_name: quantum-nexus-db
-    environment:
-      POSTGRES_DB: quantum_nexus
-      POSTGRES_USER: quantum_user
-      POSTGRES_PASSWORD: quantum_password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    ports:
-      - "5432:5432"
-    networks:
-      - quantum_nexus_network
-    restart: unless-stopped
 
   # Nginx reverse proxy (optional)
   nginx:
@@ -85,10 +66,7 @@ volumes:
     driver: local
   redis_data:
     driver: local
-  postgres_data:
-    driver: local
 
 networks:
   quantum_nexus_network:
     driver: bridge
-```

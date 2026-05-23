@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 # Initialize Flask app
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+from honeypot.adapters.driving.challenge_api import challenge_bp
+
 app = Flask(__name__,
             template_folder=os.path.join(BASE_DIR, 'web', 'templates'),
             static_folder=os.path.join(BASE_DIR, 'web', 'static'),
@@ -38,6 +40,8 @@ app = Flask(__name__,
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=24)
+
+app.register_blueprint(challenge_bp, url_prefix='/api/challenge')
 app.config['DATABASE'] = os.environ.get('DATABASE', 'quantum_nexus.db')
 
 # Initialize extensions
