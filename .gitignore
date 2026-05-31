@@ -49,3 +49,4 @@ Thumbs.db
 
 # Local virtualenv (created for verification)
 .venv/
+.claude/
