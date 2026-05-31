@@ -1,7 +1,3 @@
-### 2. `challenge_generator.py`
-This file generates unique challenges and includes HMAC verification.
-
-```python
 import time
 import json
 import random

@@ -1,7 +1,3 @@
-### 1. `challenge_framework.py`
-This file initializes the required tables and integrates with the fingerprinting system to estimate initial difficulty.
-
-```python
 import logging
 from fingerprint_db import get_db_connection
 from challenge_session import ChallengeSession

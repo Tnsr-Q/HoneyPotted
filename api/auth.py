@@ -1,4 +1,3 @@
-```python
 import jwt
 import datetime
 from functools import wraps
@@ -96,6 +95,3 @@ class AuthManager:
             )
         except jwt.InvalidTokenError:
             return None
-```
-
-```python

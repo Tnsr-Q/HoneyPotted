@@ -1,7 +1,3 @@
-fingerprint_core.py`
-This file will contain the main functionality and API for the fingerprinting system.
-
-```python
 from flask import Flask, request
 from browser_fingerprint import collect_and_log_browser_fingerprint
 from network_fingerprint import collect_and_log_network_fingerprint

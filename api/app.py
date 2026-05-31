@@ -1,4 +1,3 @@
-```python
 from flask import Flask, render_template, jsonify, request, g
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
@@ -37,21 +36,52 @@ app = Flask(__name__,
             static_url_path='/static')
 
 # Configuration
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
+def _require_env(name):
+    """Return a required environment variable or fail fast.
+
+    Secrets must never fall back to a hard-coded default — a forgotten env var
+    must stop the process, not silently ship a known-public key.
+    """
+    value = os.environ.get(name)
+    if not value:
+        raise RuntimeError(
+            f"{name} environment variable must be set (no insecure default is provided)"
+        )
+    return value
+
+app.config['SECRET_KEY'] = _require_env('SECRET_KEY')
+app.config['JWT_SECRET_KEY'] = _require_env('JWT_SECRET_KEY')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=24)
 
 app.register_blueprint(challenge_bp, url_prefix='/api/challenge')
 app.config['DATABASE'] = os.environ.get('DATABASE', 'quantum_nexus.db')
 
 # Initialize extensions
-CORS(app, resources={r"/api/*": {"origins": "*"}})
-socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
+# Allowed CORS origins are explicit, never wildcard. Configure via
+# CORS_ALLOWED_ORIGINS (comma-separated). Defaults to local dev only so that a
+# public deployment that forgets to configure it does not expose the dashboard
+# API to every origin on the internet.
+_default_origins = "http://localhost:5000,http://127.0.0.1:5000"
+CORS_ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.environ.get('CORS_ALLOWED_ORIGINS', _default_origins).split(',')
+    if o.strip()
+]
+if '*' in CORS_ALLOWED_ORIGINS:
+    raise RuntimeError("CORS_ALLOWED_ORIGINS must not contain '*'; list explicit origins")
+CORS(app, resources={r"/api/*": {"origins": CORS_ALLOWED_ORIGINS}})
+socketio = SocketIO(app, cors_allowed_origins=CORS_ALLOWED_ORIGINS, logger=True, engineio_logger=True)
 limiter = Limiter(app=app, key_func=get_remote_address, default_limits=["200 per minute"])
 
 # Initialize components
 auth_manager = AuthManager(app.config['JWT_SECRET_KEY'])
 websocket_server = WebSocketServer(socketio)
+
+# Prompt-injection trap layer: canonicalize -> detect -> route -> decoy.
+# Runs upstream of real handlers; detection/telemetry always on, enforcement
+# (synthetic decoys) gated by INJECTION_ENFORCEMENT and path exemptions.
+from honeypot.injection.middleware import PromptInjectionGuard
+injection_guard = PromptInjectionGuard(app, db_path=app.config['DATABASE'])
 
 # Database connection
 def get_db():
@@ -141,7 +171,12 @@ def init_db():
         # Create admin user if not exists
         cursor.execute("SELECT * FROM users WHERE username = 'admin'")
         if not cursor.fetchone():
-            admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+            admin_password = os.environ.get('ADMIN_PASSWORD')
+            if not admin_password:
+                raise RuntimeError(
+                    "ADMIN_PASSWORD environment variable must be set to seed the "
+                    "admin account (no insecure default is provided)"
+                )
             cursor.execute('''
                 INSERT INTO users (username, email, password_hash, role)
                 VALUES (?, ?, ?, ?)
@@ -597,6 +632,3 @@ if __name__ == '__main__':
                  port=int(os.environ.get('PORT', 5000)), 
                  debug=os.environ.get('DEBUG', 'False').lower() == 'true',
                  allow_unsafe_werkzeug=True)
-```
-
-```python

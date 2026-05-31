@@ -1,4 +1,3 @@
-```python
 """
 Production configuration for Quantum Deception Nexus.
 Environment-based configuration loading and security settings.
@@ -131,4 +130,3 @@ def get_config() -> ProductionConfig:
 
 # Export for module usage
 __all__ = ["ProductionConfig", "get_config"]
-```

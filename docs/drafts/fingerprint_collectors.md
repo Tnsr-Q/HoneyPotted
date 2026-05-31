@@ -1,7 +1,3 @@
-### 2. `fingerprint_collectors.py`
-This file will contain the core data collection functions.
-
-```python
 import hashlib
 import json
 import logging

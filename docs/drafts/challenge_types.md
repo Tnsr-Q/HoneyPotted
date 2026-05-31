@@ -1,7 +1,3 @@
-### 3. `challenge_types.py`
-This file contains various challenge implementations, including new challenge types.
-
-```python
 import json
 
 class Challenge:

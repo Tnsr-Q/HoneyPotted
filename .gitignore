@@ -46,3 +46,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local virtualenv (created for verification)
+.venv/
+.claude/

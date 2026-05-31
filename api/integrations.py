@@ -281,13 +281,22 @@ class HoneypotIntegrator:
         )
 
     # ------------------------------------------------------------------
-    def generate_challenge(self, fingerprint_hash: str, challenge_type: str = "adaptive") -> Dict[str, Any]:
-        challenge = self.challenge_api.create_challenge(fingerprint_hash, challenge_type)
+    def generate_challenge(
+        self,
+        fingerprint_hash: str,
+        challenge_type: str = "adaptive",
+        injection_bias: int = 0,
+    ) -> Dict[str, Any]:
+        challenge = self.challenge_api.create_challenge(fingerprint_hash, challenge_type, injection_bias)
         self.log_event(
             "INFO",
             "challenge",
             f"Generated {challenge_type} challenge for {fingerprint_hash[:12]}",
-            {"challenge_id": challenge["id"], "difficulty": challenge.get("difficulty")},
+            {
+                "challenge_id": challenge["id"],
+                "difficulty": challenge.get("difficulty"),
+                "injection_bias": injection_bias,
+            },
         )
         return challenge
 
