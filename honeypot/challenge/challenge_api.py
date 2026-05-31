@@ -39,8 +39,13 @@ class ChallengeAPI:
         self._ensure_tables()
 
     # ------------------------------------------------------------------
-    def create_challenge(self, fingerprint_hash: str, challenge_type: str = "adaptive") -> Dict[str, Any]:
-        difficulty = self._estimate_difficulty(fingerprint_hash)
+    def create_challenge(
+        self,
+        fingerprint_hash: str,
+        challenge_type: str = "adaptive",
+        injection_bias: int = 0,
+    ) -> Dict[str, Any]:
+        difficulty = self._estimate_difficulty(fingerprint_hash, injection_bias)
         payload = self._build_payload(challenge_type, difficulty)
         challenge = Challenge(
             challenge_id=self._generate_id(),
@@ -149,24 +154,38 @@ class ChallengeAPI:
     def _generate_id(self) -> str:
         return secrets.token_hex(8)
 
-    def _estimate_difficulty(self, fingerprint_hash: str) -> int:
+    def _estimate_difficulty(self, fingerprint_hash: str, injection_bias: int = 0) -> int:
+        """Estimate difficulty from bot detection score *and* injection profile.
+
+        ``injection_bias`` is supplied by the prompt-injection trap layer
+        (derived from injection risk, repeated attempts, and attack families),
+        so difficulty reflects hostile intent — not just the bot-likelihood
+        ``detection_score``. The combined value is capped so a single actor
+        cannot extract unbounded compute from us.
+        """
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         try:
             cursor = conn.cursor()
-            cursor.execute(
-                """
-                SELECT detection_score FROM bot_tracking WHERE fingerprint_hash = ?
-                """,
-                (fingerprint_hash,),
-            )
-            row = cursor.fetchone()
+            try:
+                cursor.execute(
+                    """
+                    SELECT detection_score FROM bot_tracking WHERE fingerprint_hash = ?
+                    """,
+                    (fingerprint_hash,),
+                )
+                row = cursor.fetchone()
+            except sqlite3.OperationalError:
+                # bot_tracking not provisioned yet — fall back to neutral base.
+                row = None
             if not row:
-                return 3
-            score = float(row["detection_score"] or 0.5)
-            return max(1, min(int(round(score * 5)), 5))
+                base = 3
+            else:
+                score = float(row["detection_score"] or 0.5)
+                base = max(1, min(int(round(score * 5)), 5))
         finally:
             conn.close()
+        return max(1, min(base + max(0, int(injection_bias)), 10))
 
     def _build_payload(self, challenge_type: str, difficulty: int) -> Dict[str, Any]:
         base_timeout = 120 + (difficulty * 30)

@@ -1,4 +1,3 @@
-```python
 #!/usr/bin/env python3
 """
 Main entry point for Quantum Deception Nexus honeypot system.
@@ -264,4 +263,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-```

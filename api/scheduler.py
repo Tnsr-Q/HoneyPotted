@@ -489,4 +489,3 @@ scheduler = TaskScheduler()
 
 # Export for module usage
 __all__ = ["TaskScheduler", "scheduler", "ScheduledTask"]
-```

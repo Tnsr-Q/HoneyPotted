@@ -1,4 +1,4 @@
-from flask import request, jsonify, Blueprint
+from flask import request, jsonify, Blueprint, g, current_app
 import hmac
 import hashlib
 import json
@@ -8,7 +8,27 @@ import time
 import os
 import secrets
 
+from honeypot.injection.router import profile_difficulty_bias
+
 logger = logging.getLogger('quantum_nexus.challenge')
+
+
+def _injection_difficulty_bias():
+    """Difficulty bias for the current request's actor from injection history.
+
+    Reads the prompt-injection guard's telemetry (if installed) so a client
+    with a track record of injection probes receives harder challenges even on
+    an otherwise-clean challenge request. Fails closed to 0 bias.
+    """
+    try:
+        guard = current_app.extensions.get('injection_guard')
+        if not guard or guard.store is None:
+            return 0
+        profile = guard.store.get_profile(guard.actor_key(request))
+        return profile_difficulty_bias(profile)
+    except Exception:
+        logger.debug("injection bias lookup failed", exc_info=True)
+        return 0
 
 challenge_bp = Blueprint('challenge', __name__)
 SECRET_KEY = os.environ.get('CHALLENGE_SECRET_KEY')
@@ -27,12 +47,19 @@ def verify_hmac(challenge_data, hmac_value, secret_key):
 @challenge_bp.route('/', methods=['POST'])
 def generate_challenge_route():
     try:
-        # Simple arithmetic challenge for MVP
+        # Arithmetic challenge whose size scales with the actor's injection
+        # history: a clean client gets the simple baseline; a repeat injector
+        # gets more operands of larger magnitude (more work to solve).
+        bias = _injection_difficulty_bias()
+        operand_count = 2 + min(bias, 6)            # 2..8 operands
+        ceiling = 10 + bias * 15                    # magnitude grows with bias
+        numbers = [secrets.randbelow(ceiling) + 1 for _ in range(operand_count)]
         challenge_data = {
             'operation': 'sum',
-            'numbers': [5, 10], # Keep it simple for now
+            'numbers': numbers,
+            'difficulty': bias,
             'timestamp': int(time.time()),
-            'timeout': 180
+            'timeout': 180 + bias * 20
         }
         challenge_id = "chal_" + secrets.token_hex(16)
         hmac_payload = {

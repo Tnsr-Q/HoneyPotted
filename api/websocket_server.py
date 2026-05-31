@@ -1,4 +1,3 @@
-```python
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import json
 import datetime
@@ -142,6 +141,3 @@ class WebSocketServer:
             self.socketio.emit('connection_count', count_data, room='dashboard')
         except Exception as e:
             self.logger.error(f"Connection count broadcast error: {str(e)}")
-```
-
-```javascript

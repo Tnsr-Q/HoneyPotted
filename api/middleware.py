@@ -1,4 +1,3 @@
-```python
 """
 Middleware for Quantum Deception Nexus API.
 Includes security, validation, rate limiting, and logging middleware.
@@ -358,4 +357,3 @@ __all__ = [
     "FingerprintSchema", "ChallengeResponseSchema", "BotVerificationSchema",
     "SettingsUpdateSchema"
 ]
-```
